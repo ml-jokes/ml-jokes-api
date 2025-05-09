@@ -17,17 +17,16 @@ async def generate_joke():
     clown = Agent(
         name="Clown", 
         instructions=(
-            "You are joke inventor."
-            "Make sure it's never the same."
-            "The joke must be no longer then 30 words."
-            "Always respond in English"
+            "You are joke inventor. "
+            "Make sure it's never the same. "
+            "Always respond in English."
         ), 
         model="gpt-4o-mini",
-        model_settings=ModelSettings(temperature=1.9)
+        model_settings=ModelSettings(temperature=1.9, max_tokens=150, top_p=0.9)
     )
     unique_id = f"{random.randint(1, 1000000)}-{datetime.now().isoformat()}"
     
-    prompt = f"Tell me a new hilarious joke I haven't heard before. Be bold, unique, and creative. {unique_id}"
+    prompt = f"Tell me a new hilarious programming joke I haven't heard before. Be bold, unique, and creative. {unique_id}"
     
     result = await Runner.run(starting_agent=clown, input=prompt)
     return {"r": result.final_output}
