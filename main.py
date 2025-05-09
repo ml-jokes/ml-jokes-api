@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+import random
+from datetime import datetime
 from fastapi import FastAPI
 from agents import Agent, Runner, set_default_openai_key, ModelSettings
 from fastapi.concurrency import run_in_threadpool
@@ -15,13 +17,19 @@ async def generate_joke():
     clown = Agent(
         name="Clown", 
         instructions=(
-            "Gnerate a funny dev jokes.",
-            "Make sure it does not repeat."
+            "You are joke inventor."
+            "Make sure it's never the same."
+            "The joke must be no longer then 30 words."
+            "Always respond in English"
         ), 
-        model="gpt-4.1-nano",
-        model_settings=ModelSettings(temperature=0.9)
+        model="gpt-4o-mini",
+        model_settings=ModelSettings(temperature=1.9)
     )
-    result = await Runner.run(starting_agent=clown, input="Give me random funny dev joke.")
+    unique_id = f"{random.randint(1, 1000000)}-{datetime.now().isoformat()}"
+    
+    prompt = f"Tell me a new hilarious joke I haven't heard before. Be bold, unique, and creative. {unique_id}"
+    
+    result = await Runner.run(starting_agent=clown, input=prompt)
     return {"r": result.final_output}
   
 
