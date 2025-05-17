@@ -1,4 +1,5 @@
 import os
+from pydantic import BaseModel
 from dotenv import load_dotenv
 import random
 from datetime import datetime
@@ -10,6 +11,9 @@ load_dotenv()
 set_default_openai_key(os.environ["OPENAI_API_KEY"])
 app = FastAPI();
 
+class JokeRailOutput(BaseModel):
+    not_a_joke: bool
+
 #TODO: need to be split and proper orginized
 @app.get("/openai_joke")
 async def generate_joke():
@@ -18,11 +22,17 @@ async def generate_joke():
     languageAgent = Agent(name="language agent",  model="gpt-4o-mini", instructions="You translate the response to English")
 
     #guardrail agent
-    joke_related_question_guardrail = Agent(name="guard rail agent",  model="gpt-4o-mini", instructions="Make sure I am asking to generate joke in valid topic")
+    joke_related_question_guardrail = Agent(
+        name="guard rail agent",  
+        model="gpt-4o-mini", 
+        instructions="Determine whether the user's input is a joke or related to jokes. Respond with `not_a_joke=False` if it is a joke or about jokes, otherwise `not_a_joke=True`.",
+        output_type=JokeRailOutput
+        )
 
     @input_guardrail
     async def joke_guardrail(context, agent: Agent, input: str) -> GuardrailFunctionOutput:
-        return GuardrailFunctionOutput(output_info={}, tripwire_triggered=False)
+        result = await Runner.run(joke_related_question_guardrail, input)
+        return GuardrailFunctionOutput(output_info={}, tripwire_triggered=result.final_output.not_a_joke)
 
     clown = Agent(
         name="Clown", 
